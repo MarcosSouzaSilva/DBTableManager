@@ -12,34 +12,36 @@ public class Tabela {
 
 		System.out.println("Todas Databases criadas");
 		System.out.println();
-		String sql = "SHOW DATABASES";
+		String listarDatabasesSql = "SHOW DATABASES";
 
 		Connection conexao = FabricaConexao.getConexao();
 
 		Statement stmt = conexao.createStatement();
 
-		ResultSet imprimirDatabase = stmt.executeQuery(sql);
+		ResultSet result = stmt.executeQuery(listarDatabasesSql);
 
-		while (imprimirDatabase.next()) {
+		while (result.next()) {
 
-			String databaseName = imprimirDatabase.getString(1);
+			String databaseName = result.getString(1);
 
 			System.out.println(databaseName);
 
 		}
+
 		System.out.println();
-		System.out.println("Digite o nome da Database na qual vai executar as operações");
+		System.out.println("\nDigite o nome da base de dados na qual deseja executar as operações:");
 		String escolhaDatabase = entrada.next();
+
 		System.out.println();
-		sql = "SHOW TABLES FROM " + escolhaDatabase;
+		String listarTabelasSql = "SHOW TABLES FROM " + escolhaDatabase;
 
-		System.out.print("As tabelas da Database '" + escolhaDatabase + "' são essas: ");
+		System.out.print("\nAs tabelas da base de dados '" + escolhaDatabase + "' são: ");
 
-		ResultSet imprimirTabela = stmt.executeQuery(sql);
+		result = stmt.executeQuery(listarTabelasSql);
 
-		while (imprimirTabela.next()) {
+		while (result.next()) {
 
-			String TabelaName = imprimirTabela.getString(1);
+			String TabelaName = result.getString(1);
 			System.out.print("'" + TabelaName + "'");
 			System.out.println();
 
@@ -69,13 +71,14 @@ public class Tabela {
 
 		case 3:
 			createTableSQL(entrada);
+
 			break;
 
 		case 4:
 			createColumnSQL(entrada);
 			break;
 		case 5:
-
+			createDatabaseSQL(entrada);
 			break;
 		default:
 			System.err.println("Entrada inválida");
@@ -83,8 +86,6 @@ public class Tabela {
 
 		}
 
-		imprimirTabela.close();
-		stmt.close();
 		conexao.close();
 		entrada.close();
 
@@ -120,7 +121,7 @@ public class Tabela {
 			String deleteSQL = "DELETE FROM pessoas WHERE nome = ?";
 
 			Connection conexao = FabricaConexao.getConexao();
-			Statement stmt = conexao.createStatement();
+			PreparedStatement stmt = conexao.prepareStatement(deleteSQL);
 
 			System.out.println("Oque voce deseja deletar ?: ");
 			String nome = entrada.next();
@@ -129,10 +130,11 @@ public class Tabela {
 
 				if ("coluna".equalsIgnoreCase(nome)) {
 
-					System.out.println("Qual o nome da coluna que deseja deletar ?");
+					System.out.println("Qual o nome ou codigo da pessoa que deseja deletar ?");
 					String nomeColuna = entrada.next();
 
-					deleteSQL = "DROP COLUMN " + nomeColuna + "";
+					deleteSQL = "ALTER TABLE pessoas DROP COLUMN " + nomeColuna;
+
 					stmt.executeUpdate(deleteSQL);
 					System.out.println("Deletado com sucesso");
 
@@ -142,16 +144,16 @@ public class Tabela {
 					String nomeTabela = entrada.next();
 
 					deleteSQL = "DROP TABLE " + nomeTabela;
-					stmt.executeUpdate(deleteSQL);
+					stmt.execute(deleteSQL);
 					System.out.println("Deletado com sucesso");
 
 				} else if ("database".equalsIgnoreCase(nome)) {
 
 					System.out.println("Qual o nome da database que deseja deletar ?");
 					String nomeDatabase = entrada.next();
-
 					deleteSQL = "DROP DATABASE " + nomeDatabase + " ";
 					stmt.executeUpdate(deleteSQL);
+					stmt.setString(1, nomeDatabase);
 					System.out.println("Deletado com sucesso !");
 
 				}
@@ -177,8 +179,7 @@ public class Tabela {
 			String coluna = entrada.next();
 
 			if (nomeTabela != null) {
-				sql = "CREATE TABLE IF NOT EXISTS " + nomeTabela + "( id int auto_increment primary KEY, " + coluna
-						+ " VARCHAR(80) NOT NULL )";
+				sql = "CREATE TABLE IF NOT EXISTS " + nomeTabela + " (codigo int auto_increment primary KEY, " + coluna + " VARCHAR(80) NOT NULL)";
 				stmt.executeUpdate(sql);
 				System.out.println("Tabela criada com sucesso !");
 
@@ -218,11 +219,11 @@ public class Tabela {
 		}
 	}
 
-	static void createdatabaseSQL(Scanner entrada) throws SQLException {
+	static void createDatabaseSQL(Scanner entrada) throws SQLException {
 		try {
 			String sql = "";
 			Connection conexao = FabricaConexao.getConexao();
-			PreparedStatement stmt = conexao.prepareStatement(sql);
+			Statement stmt = conexao.createStatement();
 
 			System.out.println("Digite o nome da sua Database");
 			String nomeDatabase = entrada.next();
@@ -230,7 +231,7 @@ public class Tabela {
 			if (nomeDatabase != null) {
 
 				sql = "CREATE DATABASE " + nomeDatabase;
-				stmt.executeUpdate();
+				stmt.executeUpdate(sql);
 				stmt.close();
 				System.out.println("Database criada com sucesso");
 			} else {
@@ -240,7 +241,7 @@ public class Tabela {
 
 			System.out.println(e.getMessage());
 		}
-	
+
 	}
 
 }
