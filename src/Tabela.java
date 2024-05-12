@@ -22,9 +22,9 @@ public class Tabela {
 
 		while (result.next()) {
 
-			String databaseName = result.getString(1);
+			String dataBaseName = result.getString(1);
 
-			System.out.println(databaseName);
+			System.out.println(dataBaseName);
 
 		}
 
@@ -35,60 +35,83 @@ public class Tabela {
 		System.out.println();
 		String listarTabelasSql = "SHOW TABLES FROM " + escolhaDatabase;
 
-		System.out.print("\nAs tabelas da base de dados '" + escolhaDatabase + "' são: ");
-
+		System.out.print("As tabelas da base de dados '" + escolhaDatabase + "' são: ");
+		System.out.println();
 		result = stmt.executeQuery(listarTabelasSql);
 
 		while (result.next()) {
 
 			String TabelaName = result.getString(1);
-			System.out.print("'" + TabelaName + "'");
-			System.out.println();
+			System.out.println("'" + TabelaName + "'");
 
 		}
 
 		System.out.println();
-		System.out.println("Selecione a opção na qual voce deseja executar na tabela '" + escolhaDatabase + "'");
-		System.out.println();
-		System.out.println("(1 = Insert)");
-		System.out.println("(2 = Delete)");
-		System.out.println("(3 = Create table)");
-		System.out.println("(4 = Create columns)");
-		System.out.println("(5 = Create Database)");
-		System.out.println();
-		System.out.println("Digite sua opção: ");
-		int escolha = entrada.nextInt();
+		System.out.println("Voce selecionou a base de dados " + escolhaDatabase);
+		System.out.println("Selecione qual tabela deseja executar as operações:");
+		String escolhaTabela = entrada.next();
 
-		switch (escolha) {
+		java.sql.DatabaseMetaData metaData = conexao.getMetaData();
+		ResultSet resul = metaData.getTables(null, null, escolhaTabela, null);
 
-		case 1:
-			inserirSQL(entrada);
-			break;
+		if (resul.next()) {
 
-		case 2:
-			deleteSQL(entrada);
-			break;
+			boolean opcoes = false;
+			while (!opcoes) {
+				System.out.println();
+				System.out
+						.println("Selecione a opção na qual voce deseja executar na tabela '" + escolhaDatabase + "'");
+				System.out.println();
+				System.out.println("(1 = Insert)");
+				System.out.println("(2 = Delete)");
+				System.out.println("(3 = Create table)");
+				System.out.println("(4 = Create columns)");
+				System.out.println("(5 = Create Database)");
+				System.out.println("(6 = Sair)");
+				System.out.println();
+				System.out.println("Digite sua opção: ");
+				int escolha = entrada.nextInt();
 
-		case 3:
-			createTableSQL(entrada);
+				switch (escolha) {
 
-			break;
+				case 1:
+					inserirSQL(entrada);
+					break;
 
-		case 4:
-			createColumnSQL(entrada);
-			break;
-		case 5:
-			createDatabaseSQL(entrada);
-			break;
-		default:
-			System.err.println("Entrada inválida");
-			break;
+				case 2:
+					deleteSQL(entrada);
+					break;
 
+				case 3:
+					createTableSQL(entrada);
+
+					break;
+
+				case 4:
+					createColumnSQL(entrada);
+					break;
+				case 5:
+					createDatabaseSQL(entrada);
+					break;
+				case 6:
+					System.out.println("Fim !");
+					System.exit(escolha);
+
+					break;
+				default:
+					System.err.println("Entrada inválida");
+					break;
+
+				}
+			}
+			
+		} else {
+			System.out.println("A tabela '" + escolhaTabela + "' não existe.");
 		}
-
+		
 		conexao.close();
 		entrada.close();
-
+		
 	}
 
 	static void inserirSQL(Scanner entrada) throws SQLException {
@@ -124,21 +147,45 @@ public class Tabela {
 			PreparedStatement stmt = conexao.prepareStatement(deleteSQL);
 
 			System.out.println("Oque voce deseja deletar ?: ");
-			String nome = entrada.next();
+			String escolha = entrada.next();
 
-			if (nome != null) {
+			if (escolha != null) {
 
-				if ("coluna".equalsIgnoreCase(nome)) {
+				if ("coluna".equalsIgnoreCase(escolha)) {
 
-					System.out.println("Qual o nome ou codigo da pessoa que deseja deletar ?");
-					String nomeColuna = entrada.next();
+					System.out.println("Oque voce deseja deletar ?");
+					String escolhaDelete = entrada.next();
 
-					deleteSQL = "ALTER TABLE pessoas DROP COLUMN " + nomeColuna;
+					if ("nome".equalsIgnoreCase(escolhaDelete)) {
 
-					stmt.executeUpdate(deleteSQL);
-					System.out.println("Deletado com sucesso");
+						System.out.println("Qual nome voce deseja deletar ?");
+						String nomeDelete = entrada.next();
 
-				} else if ("tabela".equalsIgnoreCase(nome)) {
+						deleteSQL = "DELETE FROM pessoas WHERE codigo = " + nomeDelete;
+						stmt.executeUpdate(deleteSQL);
+						System.out.println("Deletado com sucesso");
+
+					} else if ("id".equalsIgnoreCase(escolhaDelete)) {
+
+						System.out.println("Qual id voce deseja deletar ?");
+						String codigoDelete = entrada.next();
+
+						deleteSQL = "DELETE FROM pessoas WHERE id = " + codigoDelete;
+						stmt.executeUpdate(deleteSQL);
+						System.out.println("Deletado com sucesso");
+
+					} else if ("coluna".equalsIgnoreCase(escolhaDelete)) {
+
+						System.out.println("Qual coluna voce deseja deletar ?");
+						String codigoDelete = entrada.next();
+
+						deleteSQL = "ALTER TABLE pessoas DROP COLUMN " + codigoDelete;
+						stmt.executeUpdate(deleteSQL);
+						System.out.println("Deletado com sucesso");
+
+					}
+
+				} else if ("tabela".equalsIgnoreCase(escolha)) {
 
 					System.out.println("Qual o nome da tabela que deseja deletar ?");
 					String nomeTabela = entrada.next();
@@ -147,7 +194,7 @@ public class Tabela {
 					stmt.execute(deleteSQL);
 					System.out.println("Deletado com sucesso");
 
-				} else if ("database".equalsIgnoreCase(nome)) {
+				} else if ("database".equalsIgnoreCase(escolha)) {
 
 					System.out.println("Qual o nome da database que deseja deletar ?");
 					String nomeDatabase = entrada.next();
@@ -159,10 +206,15 @@ public class Tabela {
 				}
 
 			} else {
+
 				System.out.println(" Não foi possível deletar !");
+
 			}
+
 		} catch (SQLException e) {
+
 			System.out.println(e.getMessage());
+
 		}
 	}
 
@@ -179,7 +231,8 @@ public class Tabela {
 			String coluna = entrada.next();
 
 			if (nomeTabela != null) {
-				sql = "CREATE TABLE IF NOT EXISTS " + nomeTabela + " (codigo int auto_increment primary KEY, " + coluna + " VARCHAR(80) NOT NULL)";
+				sql = "CREATE TABLE IF NOT EXISTS " + nomeTabela + " (id int auto_increment primary KEY, " + coluna
+						+ " VARCHAR(80) NOT NULL)";
 				stmt.executeUpdate(sql);
 				System.out.println("Tabela criada com sucesso !");
 
@@ -210,7 +263,7 @@ public class Tabela {
 
 			} else {
 
-				System.out.println("Nao foi possível criar a coluna, valor null");
+				System.out.println("Não foi possível criar a coluna, valor null");
 			}
 
 		} catch (SQLException e) {
